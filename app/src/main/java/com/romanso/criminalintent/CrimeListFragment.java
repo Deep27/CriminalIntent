@@ -1,5 +1,6 @@
 package com.romanso.criminalintent;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.romanso.criminalintent.model.Crime;
 import com.romanso.criminalintent.model.CrimeLab;
@@ -22,9 +22,6 @@ import java.util.List;
 public class CrimeListFragment extends Fragment {
 
     private static final String TAG = "CrimeListFragment";
-
-    private static final int REQUIRES_POLICE = 0;
-    private static final int NOT_REQUIRES_POLICE = 1;
 
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
@@ -40,6 +37,12 @@ public class CrimeListFragment extends Fragment {
         updateUI();
 
         return v;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateUI();
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder
@@ -61,8 +64,8 @@ public class CrimeListFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            Toast.makeText(getActivity(), mCrime.getTitle() + " clicked!", Toast.LENGTH_SHORT)
-                    .show();
+            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
+            startActivity(intent);
         }
 
         public void bind(Crime crime) {
@@ -79,15 +82,6 @@ public class CrimeListFragment extends Fragment {
 
         public CrimeAdapter(List<Crime> crimes) {
             mCrimes = crimes;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            if (mCrimes.get(position).isRequiresPolice()) {
-                return REQUIRES_POLICE;
-            } else {
-                return NOT_REQUIRES_POLICE;
-            }
         }
 
         @NonNull
@@ -112,6 +106,14 @@ public class CrimeListFragment extends Fragment {
     private void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
+
+        if (mAdapter == null) {
+            mAdapter = new CrimeAdapter(crimes);
+            mCrimeRecyclerView.setAdapter(mAdapter);
+        } else {
+            mAdapter.notifyDataSetChanged();
+        }
+
         mAdapter = new CrimeAdapter(crimes);
         mCrimeRecyclerView.setAdapter(mAdapter);
     }
