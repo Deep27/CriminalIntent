@@ -1,5 +1,6 @@
 package com.romanso.criminalintent;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -7,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +24,10 @@ import java.util.List;
 public class CrimeListFragment extends Fragment {
 
     private static final String TAG = "CrimeListFragment";
+
+    private static final int REQUEST_CRIME = 1;
+
+    private int mClickedItemPosition = -1;
 
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
@@ -40,9 +46,17 @@ public class CrimeListFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        updateUI();
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != Activity.RESULT_OK) {
+            Log.v(TAG, "Activity result is not OK!");
+            return;
+        }
+        if (requestCode == REQUEST_CRIME) {
+            Log.v(TAG, "Updating item " + mClickedItemPosition);
+            mAdapter.notifyItemChanged(mClickedItemPosition);
+            mClickedItemPosition = -1;
+        }
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder
@@ -64,8 +78,9 @@ public class CrimeListFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
-            startActivity(intent);
+            mClickedItemPosition = getLayoutPosition();
+            Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId(), mClickedItemPosition);
+            startActivityForResult(intent, REQUEST_CRIME);
         }
 
         public void bind(Crime crime) {
@@ -106,13 +121,6 @@ public class CrimeListFragment extends Fragment {
     private void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
-
-        if (mAdapter == null) {
-            mAdapter = new CrimeAdapter(crimes);
-            mCrimeRecyclerView.setAdapter(mAdapter);
-        } else {
-            mAdapter.notifyDataSetChanged();
-        }
 
         mAdapter = new CrimeAdapter(crimes);
         mCrimeRecyclerView.setAdapter(mAdapter);

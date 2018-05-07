@@ -1,5 +1,7 @@
 package com.romanso.criminalintent;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,6 +26,7 @@ public class CrimeFragment extends Fragment {
     private static final String TAG = "CrimeFragment";
 
     private static final String ARG_CRIME_ID = "crime_id";
+    private static final String ARG_ITEM_POSITION = "item_position";
 
     private Crime mCrime;
 
@@ -61,10 +64,15 @@ public class CrimeFragment extends Fragment {
         mNeedPolice.setChecked(mCrime.isRequiresPolice());
         mNeedPolice.setOnCheckedChangeListener(((buttonView, isChecked) -> {
             mCrime.setRequiresPolice(isChecked);
+            setResultWithChangedItem();
             Log.v(TAG, mCrime.isRequiresPolice() + "");
         }));
 
         return v;
+    }
+
+    public void setResultWithChangedItem() {
+        getActivity().setResult(Activity.RESULT_OK, null);
     }
 
     private TextWatcher titleEditTextTextWatcher = new TextWatcher() {
@@ -76,6 +84,7 @@ public class CrimeFragment extends Fragment {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             mCrime.setTitle(s.toString());
+            setResultWithChangedItem();
         }
 
         @Override
@@ -84,9 +93,10 @@ public class CrimeFragment extends Fragment {
         }
     };
 
-    public static final CrimeFragment newInstance(UUID crimeId) {
+    public static final CrimeFragment newInstance(UUID crimeId, int itemPosition) {
         Bundle args = new Bundle();
         args.putSerializable(ARG_CRIME_ID, crimeId);
+        args.putInt(ARG_ITEM_POSITION, itemPosition);
         CrimeFragment fragment = new CrimeFragment();
         fragment.setArguments(args);
         return fragment;
